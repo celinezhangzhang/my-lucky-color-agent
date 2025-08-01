@@ -1,5 +1,3 @@
-# --- 最终修复版：修正了函数调用错误 ---
-
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
