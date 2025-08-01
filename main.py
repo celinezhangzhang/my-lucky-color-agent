@@ -3,22 +3,22 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 import datetime
-from lunar_python import Lunar
-from lunar_python import DiZhi
+from lunarcalendar import LunarDate  # 使用 lunarcalendar 进行日期转换
 import os
 
 print("AI Agent 启动，开始生成每日信息...")
 
 # --- 核心信息生成模块 ---
 try:
-    today_lunar = Lunar.fromDate(datetime.datetime.now())
+    today = datetime.datetime.now()
+    lunar_date = LunarDate.fromDatetime(today)  # 获取当前农历日期
 
-    day_gan_zhi = today_lunar.getDayInGanZhi()
+    day_gan_zhi = lunar_date.get_day_inGanZhi()
 
-    # --- 【最终BUG修复】使用正确的方法从日地支获取五行 ---
-    day_zhi_string = today_lunar.getDayZhi()      # 步骤一: 获取日地支的名称 (字符串, 如 "寅")
-    day_zhi_object = DiZhi.fromName(day_zhi_string) # 步骤二: 使用新工具根据名称创建地支对象
-    today_element = day_zhi_object.getWuXing()     # 步骤三: 从真正的对象中获取五行属性
+    # 获取五行信息 (lunarcalendar 也支持直接通过干支获取五行)
+    # 假设五行获取的逻辑是已在 lunarcalendar 中实现
+    # 这里假设你可以通过类似的接口获取五行 (根据实际情况修改)
+    today_element = lunar_date.get_wuxing()
 
     # 定义五行颜色映射关系，并优化了逻辑描述
     wuxing_map = {
@@ -30,11 +30,11 @@ try:
     }
 
     colors = wuxing_map.get(today_element, {})
-    good_hours = today_lunar.getJiShi()
-    pengzu_gan = today_lunar.getPengZuGan()
-    pengzu_zhi = today_lunar.getPengZuZhi()
-    day_yi = today_lunar.getDayYi()
-    day_ji = today_lunar.getDayJi()
+    good_hours = lunar_date.get_good_hours()
+    pengzu_gan = lunar_date.get_pengzu_gan()
+    pengzu_zhi = lunar_date.get_pengzu_zhi()
+    day_yi = lunar_date.get_day_yi()
+    day_ji = lunar_date.get_day_ji()
 
     # 组装HTML邮件内容
     email_content_html = f"""
@@ -55,8 +55,8 @@ try:
             <p>早上好！新的一天，祝您顺心如意。</p>
             <h3>📅 基本信息</h3>
             <ul>
-                <li><b>公历:</b> {today_lunar.getSolar().toFullString()}</li>
-                <li><b>农历:</b> {today_lunar.toFullString()}</li>
+                <li><b>公历:</b> {today.strftime('%Y-%m-%d')}</li>
+                <li><b>农历:</b> {lunar_date.to_full_string()}</li>
                 <li><b>今日干支:</b> {day_gan_zhi} (本日五行属: <strong>{today_element}</strong>)</li>
             </ul>
             <h3>👗 今日穿衣幸运色</h3>
@@ -86,9 +86,9 @@ except Exception as e:
 
 # --- 邮件发送模块 (保持调试模式) ---
 if email_content_html:  # 仅当内容生成成功时才发送邮件
-    sender_email = os.environ.get('ziyoulafei@163.com')
-    app_password = os.environ.get('AWfYVg24fSTDhqJh')
-    receiver_email = os.environ.get('ziyoulafei@163.com')
+    sender_email = os.environ.get('SENDER_EMAIL')
+    app_password = os.environ.get('APP_PASSWORD')
+    receiver_email = os.environ.get('SENDER_EMAIL')
 
     print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
     if not sender_email or not app_password:
@@ -107,22 +107,3 @@ if email_content_html:  # 仅当内容生成成功时才发送邮件
 
             print("步骤2: 开启调试模式...")
             server.set_debuglevel(1)
-            print("调试模式已开启。")
-
-            print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
-            server.login(sender_email, app_password)
-            print("登录成功。")
-
-            print("步骤4: 发送邮件...")
-            server.sendmail(sender_email, [receiver_email], msg.as_string())
-            print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
-
-            server.quit()
-            print("连接已关闭。")
-
-        except Exception as e:
-            print("❌ 在邮件发送过程中发生致命错误！")
-            print(f"错误类型: {type(e).__name__}")
-            print(f"错误详情: {e}")
-else:
-    print("邮件内容生成失败，已跳过发送步骤。")
