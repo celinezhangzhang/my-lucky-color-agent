@@ -86,15 +86,15 @@ except Exception as e:
 
 # --- 邮件发送模块 (保持调试模式) ---
 if email_content_html: # 仅当内容生成成功时才发送邮件
-        sender_email = os.environ.get('SENDER_EMAIL')
-        app_password = os.environ.get('APP_PASSWORD')
-        receiver_email = os.environ.get('SENDER_EMAIL')
+   sender_email = os.environ.get('SENDER_EMAIL')
+   app_password = os.environ.get('APP_PASSWORD')
+   receiver_email = os.environ.get('SENDER_EMAIL')
 
-print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
-if not sender_email or not app_password:
+   print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
+   if not sender_email or not app_password:
             print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
-else:
-    try:
+   else:
+     try:
                 msg = MIMEMultipart()
                 msg['From'] = Header(f"专属AI助手 <{sender_email}>")
                 msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
@@ -120,7 +120,7 @@ else:
                 server.quit()
                 print("连接已关闭。")
 
-    except Exception as e:
+        except Exception as e:
                 print("❌ 在邮件发送过程中发生致命错误！")
                 print(f"错误类型: {type(e).__name__}")
                 print(f"错误详情: {e}")
