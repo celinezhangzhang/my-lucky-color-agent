@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 import datetime
 from lunar_python import Lunar
+from lunar_python import DiZhi
 import os
 
 print("AI Agent 启动，开始生成每日信息...")
@@ -16,9 +17,10 @@ try:
 
     day_gan_zhi = today_lunar.getDayInGanZhi()
 
-    # --- 【BUG修复】使用正确的函数获取日地支的五行 ---
-    day_zhi_object = today_lunar.getDayZhi()  # 正确方式：先获取日地支对象
-    today_element = day_zhi_object.getWuXing()  # 正确方式：再从对象获取五行
+    # --- 【最终BUG修复】使用正确的方法从日地支获取五行 ---
+    day_zhi_string = today_lunar.getDayZhi()      # 步骤一: 获取日地支的名称 (字符串, 如 "寅")
+    day_zhi_object = DiZhi.fromName(day_zhi_string) # 步骤二: 使用新工具根据名称创建地支对象
+    today_element = day_zhi_object.getWuXing()     # 步骤三: 从真正的对象中获取五行属性
 
     # 定义五行颜色映射关系，并优化了逻辑描述
     wuxing_map = {
