@@ -6,19 +6,15 @@ import datetime
 from lunarcalendar import Lunar  # 使用 lunarcalendar 中的 Lunar 类进行日期转换
 import os
 
-print("AI Agent 启动，开始生成每日信息...")
-
-# --- 核心信息生成模块 ---
-try:
+def generate_email_content():
+    """生成邮件内容"""
     today = datetime.datetime.now()
-    lunar_date = Lunar.from_datetime(today)  # 获取当前农历日期
+    lunar_date = Lunar(today.year, today.month, today.day)
 
     day_gan_zhi = lunar_date.get_day_in_ganzhi()  # 获取干支
+    today_element = lunar_date.get_wuxing()  # 获取五行
 
-    # 获取五行信息 (五行获取的逻辑)
-    today_element = lunar_date.get_wuxing()  # 可能需要调整
-
-    # 定义五行颜色映射关系，并优化了逻辑描述
+    # 定义五行颜色映射关系
     wuxing_map = {
         "金": {"我生": "黑色、蓝色、灰色 (金生水)", "同我": "白色、金色、银色 (金同)", "生我": "黄色、棕色、米色 (土生金)"},
         "木": {"我生": "红色、粉色、紫色 (木生火)", "同我": "绿色、青色、碧色 (木同)", "生我": "黑色、蓝色、灰色 (水生木)"},
@@ -34,7 +30,7 @@ try:
     day_yi = lunar_date.get_day_yi()  # 今日所宜
     day_ji = lunar_date.get_day_ji()  # 今日所忌
 
-    # 组装HTML邮件内容
+    # 构建 HTML 邮件内容
     email_content_html = f"""
     <html>
     <head>
@@ -77,49 +73,51 @@ try:
     </body>
     </html>
     """
-    print("信息内容已生成完毕。")
-except Exception as e:
-    print(f"❌ 在信息生成阶段发生错误: {e}")
-    email_content_html = ""  # 如果信息生成失败，则不发送邮件内容
+    return email_content_html
 
-# --- 邮件发送模块 (保持调试模式) ---
-if email_content_html:  # 仅当内容生成成功时才发送邮件
-    sender_email = os.environ.get('ziyoulafei@163.com')
-    app_password = os.environ.get('AWfYVg24fSTDhqJh')
-    receiver_email = os.environ.get('ziyoulafei@163.com')
+def send_email(email_content_html):
+    """发送邮件的函数"""
+    sender_email = os.environ.get('SENDER_EMAIL')
+    app_password = os.environ.get('APP_PASSWORD')
+    receiver_email = os.environ.get('SENDER_EMAIL')
 
-    print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
     if not sender_email or not app_password:
         print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = Header(f"专属AI助手 <{sender_email}>")
+        msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
+        msg['Subject'] = Header(f"【AI Agent】今日五行运势播报 ({datetime.date.today()})", 'utf-8')
+        msg.attach(MIMEText(email_content_html, 'html', 'utf-8'))
+
+        print("步骤1: 连接到SMTP服务器 smtp.163.com:465...")
+        server = smtplib.SMTP_SSL("smtp.163.com", 465)
+        print("连接成功。")
+
+        print("步骤2: 开启调试模式...")
+        server.set_debuglevel(1)
+
+        print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
+        server.login(sender_email, app_password)
+        print("登录成功。")
+
+        print("步骤4: 发送邮件...")
+        server.sendmail(sender_email, [receiver_email], msg.as_string())
+        print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
+
+        server.quit()
+        print("连接已关闭。")
+
+    except Exception as e:
+        print("❌ 在邮件发送过程中发生致命错误！")
+        print(f"错误类型: {type(e).__name__}")
+        print(f"错误详情: {e}")
+
+if __name__ == "__main__":
+    email_content_html = generate_email_content()
+    if email_content_html:
+        send_email(email_content_html)
     else:
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = Header(f"专属AI助手 <{sender_email}>")
-            msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
-            msg['Subject'] = Header(f"【AI Agent】今日五行运势播报 ({datetime.date.today()})", 'utf-8')
-            msg.attach(MIMEText(email_content_html, 'html', 'utf-8'))
-
-            print("步骤1: 连接到SMTP服务器 smtp.163.com:465...")
-            server = smtplib.SMTP_SSL("smtp.163.com", 465)
-            print("连接成功。")
-
-            print("步骤2: 开启调试模式...")
-            server.set_debuglevel(1)
-
-            print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
-            server.login(sender_email, app_password)
-            print("登录成功。")
-
-            print("步骤4: 发送邮件...")
-            server.sendmail(sender_email, [receiver_email], msg.as_string())
-            print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
-
-            server.quit()
-            print("连接已关闭。")
-
-        except Exception as e:
-            print("❌ 在邮件发送过程中发生致命错误！")
-            print(f"错误类型: {type(e).__name__}")
-            print(f"错误详情: {e}")
-else:
-    print("邮件内容生成失败，已跳过发送步骤。")
+        print("邮件内容生成失败，已跳过发送步骤。")
