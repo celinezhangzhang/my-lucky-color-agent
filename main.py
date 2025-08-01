@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 import datetime
-from lunarcalendar import LunarDate  # 使用 lunarcalendar 进行日期转换
+from lunarcalendar import Lunar  # 使用 lunarcalendar 中的 Lunar 类进行日期转换
 import os
 
 print("AI Agent 启动，开始生成每日信息...")
@@ -11,12 +11,12 @@ print("AI Agent 启动，开始生成每日信息...")
 # --- 核心信息生成模块 ---
 try:
     today = datetime.datetime.now()
-    lunar_date = LunarDate.fromDatetime(today)  # 获取当前农历日期
+    lunar_date = Lunar.from_datetime(today)  # 获取当前农历日期
 
-    day_gan_zhi = lunar_date.get_day_inGanZhi()
+    day_gan_zhi = lunar_date.get_day_in_ganzhi()  # 获取干支
 
-    # 获取五行信息 (lunarcalendar 也支持直接通过干支获取五行)
-    today_element = lunar_date.get_wuxing()  # 更新此行，获取五行的具体方法根据 lunarcalendar 的 API 进行调整
+    # 获取五行信息 (五行获取的逻辑)
+    today_element = lunar_date.get_wuxing()  # 可能需要调整
 
     # 定义五行颜色映射关系，并优化了逻辑描述
     wuxing_map = {
@@ -28,11 +28,11 @@ try:
     }
 
     colors = wuxing_map.get(today_element, {})
-    good_hours = lunar_date.get_good_hours()  # 替换为相应的方法
-    pengzu_gan = lunar_date.get_pengzu_gan()  # 替换为相应的方法
-    pengzu_zhi = lunar_date.get_pengzu_zhi()  # 替换为相应的方法
-    day_yi = lunar_date.get_day_yi()  # 替换为相应的方法
-    day_ji = lunar_date.get_day_ji()  # 替换为相应的方法
+    good_hours = lunar_date.get_good_hours()  # 获取良辰吉时
+    pengzu_gan = lunar_date.get_pengzu_gan()  # 彭祖百忌
+    pengzu_zhi = lunar_date.get_pengzu_zhi()  # 彭祖地支
+    day_yi = lunar_date.get_day_yi()  # 今日所宜
+    day_ji = lunar_date.get_day_ji()  # 今日所忌
 
     # 组装HTML邮件内容
     email_content_html = f"""
