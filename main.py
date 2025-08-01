@@ -1,4 +1,5 @@
- # --- 这是带有超级调试模式的最终版本 ---
+# --- 最终修复版：修正了函数调用错误 ---
+
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -9,69 +10,120 @@ import os
 
 print("AI Agent 启动，开始生成每日信息...")
 
-# ... [这部分和之前完全一样，是信息生成模块] ...
-# 为了简洁，这里省略，您在粘贴时请保留这部分完整代码
-today_lunar = Lunar.fromDate(datetime.datetime.now())
-day_gan_zhi = today_lunar.getDayInGanZhi()
-day_zhi = day_gan_zhi[1]
-day_wuxing_from_zhi = today_lunar.getDayZhiWuXing()
-wuxing_map = {
-        "金": {"생": "黄色、棕色、米色 (土生金)", "self": "白色、金色、银色 (金同)", "克": "绿色、青色 (金克木)"},
-        "木": {"생": "黑色、蓝色、灰色 (水生木)", "self": "绿色、青色、碧色 (木同)", "克": "红色、粉色、紫色 (木生火)"}, # 注意：这里修改为木生火为“所生”，而非“所克”
-        "水": {"생": "白色、金色、银色 (金生水)", "self": "黑色、蓝色、灰色 (水同)", "克": "黄色、棕色、米色 (水克土)"},
-        "火": {"생": "绿色、青色、碧色 (木生火)", "self": "红色、粉色、紫色 (火同)", "克": "白色、金色、银色 (火克金)"},
-        "土": {"생": "红色、粉色、紫色 (火生土)", "self": "黄色、棕色、米色 (土同)", "克": "黑色、蓝色、灰色 (土克水)"},
-    }
-today_element = day_wuxing_from_zhi
-colors = wuxing_map.get(today_element, {})
-good_hours = today_lunar.getJiShi()
-pengzu_gan = today_lunar.getPengZuGan()
-pengzu_zhi = today_lunar.getPengZuZhi()
-email_content_html = f"""
-<html><body>
-    ... [HTML邮件内容和之前一样，这里省略] ...
-    <div class="container"><h2>AI为您定制的今日五行指南 🌿</h2><p>早上好！新的一天，祝您顺心如意。</p><h3>📅 基本信息</h3><ul><li><b>公历:</b> {today_lunar.getSolar().toFullString()}</li><li><b>农历:</b> {today_lunar.toFullString()}</li><li><b>今日干支:</b> {day_gan_zhi}</li><li><b>本日五行:</b> {today_element}</li></ul><h3>👗 今日穿衣幸运色</h3><div class="tip"><p><b>🥇 大吉（我生之，食伤生财）:</b> {colors.get('克', '暂无')}</p><p><b>🥈 次吉（同我者，比劫助力）:</b> {colors.get('self', '暂无')}</p><p><b>👍 平（生我者，印绶护身）:</b> {colors.get('생', '暂无')}</p></div><h3>✅ 今日宜忌与吉时</h3><ul><li><b>今日所宜:</b> {', '.join(today_lunar.getDayYi())}</li><li><b>今日所忌:</b> {', '.join(today_lunar.getDayJi())}</li><li><b>良辰吉时:</b> {', '.join(good_hours)}</li><li><b>彭祖百忌:</b> {pengzu_gan}; {pengzu_zhi}</li></ul><div class="footer"><p>此邮件由您的专属AI Agent自动生成并发送</p></div></div>
-    </body></html>
-    """
-print("信息内容已生成完毕。")
+# --- 核心信息生成模块 ---
+try:
+        today_lunar = Lunar.fromDate(datetime.datetime.now())
+        
+        day_gan_zhi = today_lunar.getDayInGanZhi()
+        
+        # --- 【BUG修复】使用正确的函数获取日地支的五行 ---
+        day_zhi_object = today_lunar.getDayZhi() # 正确方式：先获取日地支对象
+        today_element = day_zhi_object.getWuXing() # 正确方式：再从对象获取五行
+        
+        # 定义五行颜色映射关系，并优化了逻辑描述
+        wuxing_map = {
+            "金": {"我生": "黑色、蓝色、灰色 (金生水)", "同我": "白色、金色、银色 (金同)", "生我": "黄色、棕色、米色 (土生金)"},
+            "木": {"我生": "红色、粉色、紫色 (木生火)", "同我": "绿色、青色、碧色 (木同)", "生我": "黑色、蓝色、灰色 (水生木)"},
+            "水": {"我生": "绿色、青色、碧色 (水生木)", "同我": "黑色、蓝色、灰色 (水同)", "生我": "白色、金色、银色 (金生水)"},
+            "火": {"我生": "黄色、棕色、米色 (火生土)", "同我": "红色、粉色、紫色 (火同)", "生我": "绿色、青色、碧色 (木生火)"},
+            "土": {"我生": "白色、金色、银色 (土生金)", "同我": "黄色、棕色、米色 (土同)", "生我": "红色、粉色、紫色 (火生土)"}
+        }
+        
+        colors = wuxing_map.get(today_element, {})
+        good_hours = today_lunar.getJiShi()
+        pengzu_gan = today_lunar.getPengZuGan()
+        pengzu_zhi = today_lunar.getPengZuZhi()
+        day_yi = today_lunar.getDayYi()
+        day_ji = today_lunar.getDayJi()
 
+        # 组装HTML邮件内容
+        email_content_html = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+                h2 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;}}
+                h3 {{ color: #34495e; }}
+                .tip {{ background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0; }}
+                .footer {{ font-size: 0.9em; color: #7f8c8d; text-align: center; margin-top: 20px;}}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>AI为您定制的今日五行指南 🌿</h2>
+                <p>早上好！新的一天，祝您顺心如意。</p>
+                <h3>📅 基本信息</h3>
+                <ul>
+                    <li><b>公历:</b> {today_lunar.getSolar().toFullString()}</li>
+                    <li><b>农历:</b> {today_lunar.toFullString()}</li>
+                    <li><b>今日干支:</b> {day_gan_zhi} (本日五行属: <strong>{today_element}</strong>)</li>
+                </ul>
+                <h3>👗 今日穿衣幸运色</h3>
+                <div class="tip">
+                    <p><b>🥇 大吉（我生，精力充沛）:</b> {colors.get('我生', '暂无')}</p>
+                    <p><b>🥈 次吉（同我，增强力量）:</b> {colors.get('同我', '暂无')}</p>
+                    <p><b>👍 平安（生我，得贵人助）:</b> {colors.get('生我', '暂无')}</p>
+                </div>
+                <h3>✅ 今日提醒</h3>
+                <ul>
+                    <li><b>今日所宜:</b> {', '.join(day_yi) if day_yi else '无'}</li>
+                    <li><b>今日所忌:</b> {', '.join(day_ji) if day_ji else '无'}</li>
+                    <li><b>良辰吉时:</b> {', '.join(good_hours)}</li>
+                    <li><b>彭祖百忌:</b> {pengzu_gan}; {pengzu_zhi}</li>
+                </ul>
+                <div class="footer">
+                    <p>此邮件由您的专属AI Agent自动生成并发送</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        print("信息内容已生成完毕。")
+except Exception as e:
+        print(f"❌ 在信息生成阶段发生错误: {e}")
+        email_content_html = "" # 如果信息生成失败，则不发送邮件内容
 
-# --- 邮件发送模块 (调试版) ---
-sender_email = os.environ.get('ziyoulafei@163.com')
-app_password = os.environ.get('AWfYVg24fSTDhqJh')
-receiver_email = os.environ.get('ziyoulafei@163.com')
+# --- 邮件发送模块 (保持调试模式) ---
+if email_content_html: # 仅当内容生成成功时才发送邮件
+        sender_email = os.environ.get('SENDER_EMAIL')
+        app_password = os.environ.get('APP_PASSWORD')
+        receiver_email = os.environ.get('SENDER_EMAIL')
 
 print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
 if not sender_email or not app_password:
-   print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
+            print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
 else:
-   try:
-            msg = MIMEMultipart()
-            msg['From'] = Header(f"专属AI助手 <{sender_email}>")
-            msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
-            msg['Subject'] = Header(f"【调试】今日五行运势播报 ({datetime.date.today()})", 'utf-8')
-            msg.attach(MIMEText(email_content_html, 'html', 'utf-8'))
+    try:
+                msg = MIMEMultipart()
+                msg['From'] = Header(f"专属AI助手 <{sender_email}>")
+                msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
+                msg['Subject'] = Header(f"【AI Agent】今日五行运势播报 ({datetime.date.today()})", 'utf-8')
+                msg.attach(MIMEText(email_content_html, 'html', 'utf-8'))
 
-            print("步骤1: 连接到SMTP服务器 smtp.163.com:465...")
-            server = smtplib.SMTP_SSL("smtp.163.com", 465)
-            print("连接成功。")
+                print("步骤1: 连接到SMTP服务器 smtp.163.com:465...")
+                server = smtplib.SMTP_SSL("smtp.163.com", 465)
+                print("连接成功。")
 
-            print("步骤2: 开启调试模式，显示所有通信日志...")
-            server.set_debuglevel(1) # 开启详细调试日志
-            print("调试模式已开启。")
+                print("步骤2: 开启调试模式...")
+                server.set_debuglevel(1)
+                print("调试模式已开启。")
 
-            print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
-            server.login(sender_email, app_password)
-            print("登录成功。")
+                print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
+                server.login(sender_email, app_password)
+                print("登录成功。")
 
-            print("步骤4: 发送邮件...")
-            server.sendmail(sender_email, [receiver_email], msg.as_string())
-            print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
+                print("步骤4: 发送邮件...")
+                server.sendmail(sender_email, [receiver_email], msg.as_string())
+                print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
 
-            server.quit()
-            print("连接已关闭。")
+                server.quit()
+                print("连接已关闭。")
 
-   except Exception as e:
-            print("❌ 在邮件发送过程中发生致命错误！")
-            print(f"错误类型: {type(e).__name__}")
-            print(f"错误详情: {e}")
+    except Exception as e:
+                print("❌ 在邮件发送过程中发生致命错误！")
+                print(f"错误类型: {type(e).__name__}")
+                print(f"错误详情: {e}")
+else:
+        print("邮件内容生成失败，已跳过发送步骤。")
+
