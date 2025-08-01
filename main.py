@@ -84,9 +84,9 @@ except Exception as e:
 
 # --- 邮件发送模块 (保持调试模式) ---
 if email_content_html:  # 仅当内容生成成功时才发送邮件
-    sender_email = os.environ.get('SENDER_EMAIL')
-    app_password = os.environ.get('APP_PASSWORD')
-    receiver_email = os.environ.get('SENDER_EMAIL')
+    sender_email = os.environ.get('ziyoulafei@163.com')
+    app_password = os.environ.get('AWfYVg24fSTDhqJh')
+    receiver_email = os.environ.get('ziyoulafei@163.com')
 
     print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
     if not sender_email or not app_password:
