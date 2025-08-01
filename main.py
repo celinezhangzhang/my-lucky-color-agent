@@ -95,7 +95,7 @@ try:
     # 步骤 4: 发送邮件模块
     # --- 请在这里填入您的信息 ---
     sender_email = "ziyoulafei@163.com"  # 您的163邮箱地址
-    app_password = "SBe3sBgrtDwR7xmA"  # 替换成您的授权码
+    app_password = "AWfYVg24fSTDhqJh"  # 替换成您的授权码
     receiver_email = "ziyoulafei@163.com" # 接收邮箱，也就是您自己
     # -----------------------------
 
