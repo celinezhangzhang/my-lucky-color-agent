@@ -16,9 +16,7 @@ try:
     day_gan_zhi = lunar_date.get_day_inGanZhi()
 
     # 获取五行信息 (lunarcalendar 也支持直接通过干支获取五行)
-    # 假设五行获取的逻辑是已在 lunarcalendar 中实现
-    # 这里假设你可以通过类似的接口获取五行 (根据实际情况修改)
-    today_element = lunar_date.get_wuxing()
+    today_element = lunar_date.get_wuxing()  # 更新此行，获取五行的具体方法根据 lunarcalendar 的 API 进行调整
 
     # 定义五行颜色映射关系，并优化了逻辑描述
     wuxing_map = {
@@ -30,11 +28,11 @@ try:
     }
 
     colors = wuxing_map.get(today_element, {})
-    good_hours = lunar_date.get_good_hours()
-    pengzu_gan = lunar_date.get_pengzu_gan()
-    pengzu_zhi = lunar_date.get_pengzu_zhi()
-    day_yi = lunar_date.get_day_yi()
-    day_ji = lunar_date.get_day_ji()
+    good_hours = lunar_date.get_good_hours()  # 替换为相应的方法
+    pengzu_gan = lunar_date.get_pengzu_gan()  # 替换为相应的方法
+    pengzu_zhi = lunar_date.get_pengzu_zhi()  # 替换为相应的方法
+    day_yi = lunar_date.get_day_yi()  # 替换为相应的方法
+    day_ji = lunar_date.get_day_ji()  # 替换为相应的方法
 
     # 组装HTML邮件内容
     email_content_html = f"""
@@ -107,3 +105,21 @@ if email_content_html:  # 仅当内容生成成功时才发送邮件
 
             print("步骤2: 开启调试模式...")
             server.set_debuglevel(1)
+
+            print(f"步骤3: 使用授权码登录邮箱 {sender_email}...")
+            server.login(sender_email, app_password)
+            print("登录成功。")
+
+            print("步骤4: 发送邮件...")
+            server.sendmail(sender_email, [receiver_email], msg.as_string())
+            print("✅ 邮件已从脚本成功发出！如果仍未收到，请检查下方服务器日志。")
+
+            server.quit()
+            print("连接已关闭。")
+
+        except Exception as e:
+            print("❌ 在邮件发送过程中发生致命错误！")
+            print(f"错误类型: {type(e).__name__}")
+            print(f"错误详情: {e}")
+else:
+    print("邮件内容生成失败，已跳过发送步骤。")
