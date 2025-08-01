@@ -33,19 +33,19 @@ email_content_html = f"""
     <div class="container"><h2>AI为您定制的今日五行指南 🌿</h2><p>早上好！新的一天，祝您顺心如意。</p><h3>📅 基本信息</h3><ul><li><b>公历:</b> {today_lunar.getSolar().toFullString()}</li><li><b>农历:</b> {today_lunar.toFullString()}</li><li><b>今日干支:</b> {day_gan_zhi}</li><li><b>本日五行:</b> {today_element}</li></ul><h3>👗 今日穿衣幸运色</h3><div class="tip"><p><b>🥇 大吉（我生之，食伤生财）:</b> {colors.get('克', '暂无')}</p><p><b>🥈 次吉（同我者，比劫助力）:</b> {colors.get('self', '暂无')}</p><p><b>👍 平（生我者，印绶护身）:</b> {colors.get('생', '暂无')}</p></div><h3>✅ 今日宜忌与吉时</h3><ul><li><b>今日所宜:</b> {', '.join(today_lunar.getDayYi())}</li><li><b>今日所忌:</b> {', '.join(today_lunar.getDayJi())}</li><li><b>良辰吉时:</b> {', '.join(good_hours)}</li><li><b>彭祖百忌:</b> {pengzu_gan}; {pengzu_zhi}</li></ul><div class="footer"><p>此邮件由您的专属AI Agent自动生成并发送</p></div></div>
     </body></html>
     """
-    print("信息内容已生成完毕。")
+print("信息内容已生成完毕。")
 
 
-    # --- 邮件发送模块 (调试版) ---
-    sender_email = os.environ.get('ziyoulafei@163.com')
-    app_password = os.environ.get('AWfYVg24fSTDhqJh')
-    receiver_email = os.environ.get('ziyoulafei@163.com')
+# --- 邮件发送模块 (调试版) ---
+sender_email = os.environ.get('ziyoulafei@163.com')
+app_password = os.environ.get('AWfYVg24fSTDhqJh')
+receiver_email = os.environ.get('ziyoulafei@163.com')
 
-    print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
-    if not sender_email or not app_password:
-        print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
-    else:
-        try:
+print(f"准备发送邮件，发件人: {sender_email}, 收件人: {receiver_email}")
+if not sender_email or not app_password:
+   print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
+else:
+   try:
             msg = MIMEMultipart()
             msg['From'] = Header(f"专属AI助手 <{sender_email}>")
             msg['To'] = Header(f"亲爱的主人 <{receiver_email}>")
@@ -71,7 +71,7 @@ email_content_html = f"""
             server.quit()
             print("连接已关闭。")
 
-        except Exception as e:
+   except Exception as e:
             print("❌ 在邮件发送过程中发生致命错误！")
             print(f"错误类型: {type(e).__name__}")
             print(f"错误详情: {e}")
