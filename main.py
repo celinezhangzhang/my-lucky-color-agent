@@ -77,9 +77,9 @@ def generate_email_content():
 
 def send_email(email_content_html):
     """发送邮件的函数"""
-    sender_email = os.environ.get('SENDER_EMAIL')
-    app_password = os.environ.get('APP_PASSWORD')
-    receiver_email = os.environ.get('SENDER_EMAIL')
+    sender_email = os.environ.get('ziyoulafei@163.com')
+    app_password = os.environ.get('AWfYVg24fSTDhqJh')
+    receiver_email = os.environ.get('ziyoulafei@163.com')
 
     if not sender_email or not app_password:
         print("❌ 严重错误: 无法从Secrets中获取邮箱或授权码！请检查GitHub Secrets配置。")
